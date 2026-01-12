@@ -9,9 +9,12 @@ import SwiftUI
 
 @main
 struct money_manageApp: App {
+    
+    @StateObject private var authState = AuthState()
     var body: some Scene {
         WindowGroup {
-            ContentView()
+//            ContentView()
+            RootView().environmentObject(authState)
         }
     }
 }
