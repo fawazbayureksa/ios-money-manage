@@ -13,7 +13,7 @@ struct RootView: View {
 
     var body: some View {
         if authState.isLoggedIn {
-            ContentView()
+            HomeScreenView()
         } else {
             LoginView()
         }

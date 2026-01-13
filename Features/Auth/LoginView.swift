@@ -9,11 +9,12 @@ import SwiftUI
 import Foundation
 
 struct LoginView: View {
+    @EnvironmentObject var authState: AuthState
     @StateObject private var viewModel = LoginViewModel()
     @State private var showPassword = false
     
     // Theme Colors
-    private let primaryColor = Color(red: 0.38, green: 0.0, blue: 0.92) // #6200EA similar
+    private let primaryColor = Color(red: 0.0, green: 0.5, blue: 0.5)
     private let backgroundColor = Color(uiColor: .systemGroupedBackground)
     
     var body: some View {
@@ -73,7 +74,7 @@ struct LoginView: View {
                     
                     // Password Input
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Password")
+                        Text("Passwords")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
@@ -155,6 +156,14 @@ struct LoginView: View {
         .onTapGesture {
             // Dismiss keyboard
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
+        .onAppear {
+            viewModel.onLoginSuccess = {
+                // Ensure UI update happens on main thread
+                DispatchQueue.main.async {
+                    authState.loginSuccess()
+                }
+            }
         }
     }
 }
