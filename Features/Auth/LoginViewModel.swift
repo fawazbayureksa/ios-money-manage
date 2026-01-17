@@ -31,9 +31,21 @@ final class LoginViewModel: ObservableObject {
         let password: String
     }
     
+    struct User: Decodable {
+        let id: Int
+        let name: String
+        let email: String
+    }
+    
+    struct LoginData: Decodable {
+        let token: String
+        let user: User
+    }
+    
     struct LoginResponse: Decodable {
-        let token: String?
-        // Add other fields if needed
+        let success: Bool
+        let message: String?
+        let data: LoginData?
     }
     
     func login() {
@@ -58,6 +70,7 @@ final class LoginViewModel: ObservableObject {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
         let body = ["email": email, "password": password]
+        print(body)
         
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -89,10 +102,27 @@ final class LoginViewModel: ObservableObject {
                 // Assuming success doesn't need parsing token for this step, 
                 // but good to check if data exists.
                 // If you need the token, parse it here:
-                // if let data = data, let decoded = try? JSONDecoder().decode(LoginResponse.self, from: data) { ... }
-                
-                print("Login successful")
-                self?.onLoginSuccess?()
+
+                do {
+                    let decoded = try JSONDecoder().decode(LoginResponse.self, from: data!)
+                    
+                    if decoded.success {
+                        print("✅ Login success")
+                        if let loginData = decoded.data {
+                            print("🔑 Token:", loginData.token)
+                            if let token = decoded.data?.token {
+                                TokenManager.shared.saveToken(token)
+                            }
+                        }
+                         self?.onLoginSuccess?()
+                    } else {
+                        self?.errorMessage = decoded.message ?? "Login failed"
+                    }
+                } catch {
+                    print("❌ Decode error:", error)
+                    self?.errorMessage = "Failed to parse response"
+                }
+
             }
         }.resume()
     }

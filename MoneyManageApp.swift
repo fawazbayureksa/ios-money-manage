@@ -7,8 +7,9 @@
 
 import SwiftUI
 
+
 @main
-struct money_manageApp: App {
+struct MoneyManageApp: App {
     
     @StateObject private var authState = AuthState()
     var body: some Scene {
@@ -18,3 +19,5 @@ struct money_manageApp: App {
         }
     }
 }
+
+

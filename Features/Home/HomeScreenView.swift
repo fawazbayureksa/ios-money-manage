@@ -8,15 +8,12 @@ import SwiftUI
 
 struct HomeScreenView: View {
     var body: some View {
-        VStack {
-            VStack(spacing: 8) {
-                Text("Welcome to \(AppConfig.appName)")
-                    .font(.system(size: 14, weight: .bold))
-
+        NavigationView{
+            ScrollView {
+                HeaderView(username: "Fawwaz Bayureksa")
             }
-            .padding()
-        }
-        .padding()
+            .ignoresSafeArea(edges: .top)
+        }.navigationTitle("Home")
     }
 }
 
