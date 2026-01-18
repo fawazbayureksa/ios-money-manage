@@ -20,18 +20,37 @@ struct TransactionScreenView: View {
                 
                 if viewModel.isLoading {
                     ProgressView("Loading...")
-                } else if viewModel.transactions.isEmpty {
-                    TransactionEmptyView()
                 } else {
-                    ScrollView {
-                        TransactionListView(
-                            transactions: viewModel.transactions,
-                            onDelete: { transaction in
-                                transactionToDelete = transaction
-                                showDeleteAlert = true
+                    VStack(spacing: 0) {
+                        // Filter View
+                        TransactionFilterView(
+                            selectedFilter: $viewModel.filterType,
+                            onFilterChanged: { filter in
+                                // Reset other filters when "All" is selected
+                                if filter == .all {
+                                    viewModel.categoryId = nil
+                                    viewModel.startDate = nil
+                                    viewModel.endDate = nil
+                                }
                             }
                         )
-                        .padding(.vertical, 16)
+                        .background(Color(.systemBackground))
+                        
+                        // Transaction List
+                        if viewModel.filteredTransactions.isEmpty {
+                            TransactionEmptyView()
+                        } else {
+                            ScrollView {
+                                TransactionListView(
+                                    transactions: viewModel.filteredTransactions,
+                                    onDelete: { transaction in
+                                        transactionToDelete = transaction
+                                        showDeleteAlert = true
+                                    }
+                                )
+                                .padding(.vertical, 16)
+                            }
+                        }
                     }
                 }
             }
@@ -54,12 +73,11 @@ struct TransactionScreenView: View {
                 Text("Are you sure you want to delete this transaction?")
             }
             .onAppear {
-                // Use mock data for now, replace with fetchTransactions() when API is ready
-//                viewModel.loadMockData()
                  viewModel.fetchTransactions()
             }
         }
     }
+
 }
 
 #Preview {

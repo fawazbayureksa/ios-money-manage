@@ -14,6 +14,31 @@ final class TransactionViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     
+    // MARK: - Filter Properties
+    @Published var filterType: TransactionFilterType = .all
+    @Published var categoryId: Int?
+    @Published var startDate: Date?
+    @Published var endDate: Date?
+    
+    // MARK: - Filtered Transactions
+    var filteredTransactions: [Transaction] {
+        transactions.filter { transaction in
+            // Filter by transaction type
+            if let typeValue = filterType.transactionTypeValue {
+                if transaction.transactionType != typeValue {
+                    return false
+                }
+            }
+            
+            // Filter by category (if set)
+            if let catId = categoryId, transaction.categoryId != catId {
+                return false
+            }
+            
+            return true
+        }
+    }
+    
     // MARK: - API Response Models
     
     struct TransactionResponse: Decodable {
@@ -35,13 +60,11 @@ final class TransactionViewModel: ObservableObject {
         }
         print(url)
         var request = URLRequest(url: url)
-        var token =  TokenManager.shared.getToken() ?? ""
+        let token =  TokenManager.shared.getToken() ?? ""
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        // TODO: Add auth token header
-        // request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-        
+     
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 self?.isLoading = false
