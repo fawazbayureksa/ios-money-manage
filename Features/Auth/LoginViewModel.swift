@@ -98,10 +98,6 @@ final class LoginViewModel: ObservableObject {
                     self?.errorMessage = "Login failed: \(httpResponse.statusCode)"
                     return
                 }
-                
-                // Assuming success doesn't need parsing token for this step, 
-                // but good to check if data exists.
-                // If you need the token, parse it here:
 
                 do {
                     let decoded = try JSONDecoder().decode(LoginResponse.self, from: data!)
@@ -109,7 +105,6 @@ final class LoginViewModel: ObservableObject {
                     if decoded.success {
                         print("✅ Login success")
                         if let loginData = decoded.data {
-                            print("🔑 Token:", loginData.token)
                             if let token = decoded.data?.token {
                                 TokenManager.shared.saveToken(token)
                             }

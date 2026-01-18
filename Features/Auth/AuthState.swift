@@ -18,16 +18,19 @@ final class AuthState: ObservableObject {
     }
 
     func checkLogin() {
-        // TEMP: first load always go to login
-        // later replace with token check
-        isLoggedIn = false
+        // Check if token exists
+        if let token = TokenManager.shared.getToken(), !token.isEmpty {
+            isLoggedIn = true
+        } else {
+            isLoggedIn = false
+        }
     }
 
     func loginSuccess() {
         isLoggedIn = true
     }
 
-    func logout() {
+    func logoutSuccess() {
         isLoggedIn = false
     }
 }

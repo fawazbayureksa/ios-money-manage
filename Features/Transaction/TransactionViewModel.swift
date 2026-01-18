@@ -102,11 +102,11 @@ final class TransactionViewModel: ObservableObject {
             errorMessage = "Invalid URL"
             return
         }
-        
+        let token =  TokenManager.shared.getToken() ?? ""
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        // TODO: Add auth token header
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
