@@ -27,11 +27,11 @@ struct BudgetCardView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(budget.category_name ?? "General")
+                        Text(budget.categoryName ?? "General")
                             .font(.headline)
                             .foregroundColor(.primary)
                         
-                        Text(budget.period.capitalized)
+                        Text(budget.period?.capitalized ?? "")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -59,19 +59,19 @@ struct BudgetCardView: View {
                             .fontWeight(.medium)
                     }
                     
-                    ProgressView(value: min(budget.percentage_used ?? 0, 100), total: 100)
+                    ProgressView(value: min(budget.percentageUsed ?? 0, 100), total: 100)
                         .tint(statusColor)
                         .scaleEffect(x: 1, y: 1.5, anchor: .center)
                     
                     HStack {
-                        Text("\(Int(budget.percentage_used ?? 0))% used")
+                        Text("\(Int(budget.percentageUsed ?? 0))% used")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
                         Spacer()
                         
-                        if let remaining = budget.remaining_amount {
-                            Text(remaining >= 0 ? "\(formattedRemaining) left" : "\(formattedOverContent) over")
+                        if let remaining = budget.remainingAmount {
+                            Text(remaining >= 0 ? "\(budget.formattedRemaining) left" : "\(budget.formattedOver) over")
                                 .font(.caption)
                                 .foregroundColor(remaining >= 0 ? .green : .red)
                         }
@@ -106,20 +106,6 @@ struct BudgetCardView: View {
     
     private var statusText: String {
         budget.status?.uppercased() ?? "INFO"
-    }
-    
-    private var formattedRemaining: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "IDR"
-        return formatter.string(from: NSNumber(value: abs(budget.remaining_amount ?? 0))) ?? "Rp0"
-    }
-
-    private var formattedOverContent: String {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "IDR"
-        return formatter.string(from: NSNumber(value: abs(budget.remaining_amount ?? 0))) ?? "Rp0"
     }
 }
 

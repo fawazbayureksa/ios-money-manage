@@ -42,7 +42,7 @@ struct BudgetScreenView: View {
                             ForEach(viewModel.budgets) { budget in
                                 BudgetCardView(budget: budget) {
                                     // Handle navigation to transaction detail with filter
-                                    print("Navigating to transactions for \(budget.category_name ?? "")")
+                                    print("Navigating to transactions for \(budget.categoryName ?? "")")
                                 }
                             }
                         }
@@ -116,4 +116,9 @@ struct BudgetScreenView_Previews: PreviewProvider {
     static var previews: some View {
         BudgetScreenView()
     }
+}
+
+
+#Preview {
+    BudgetScreenView()
 }
