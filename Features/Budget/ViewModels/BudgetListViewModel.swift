@@ -26,10 +26,11 @@ class BudgetListViewModel: ObservableObject {
         do {
             budgets = try await service.getBudgets()
         } catch {
+            if error.localizedDescription.contains("Cancelled") || error.localizedDescription.contains("cancelled") {
+                return
+            }
             errorMessage = error.localizedDescription
             hasError = true
-            // Load mock data if API fails (optional, for development)
-            // budgets = Budget.mockData
         }
         
         isLoading = false
