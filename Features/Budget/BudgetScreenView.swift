@@ -93,20 +93,12 @@ struct BudgetScreenView: View {
                 Text(viewModel.errorMessage ?? "An unknown error occurred")
             }
             .sheet(isPresented: $showingAddBudget) {
-                // Placeholder for Add Budget View
-                NavigationStack {
-                    VStack {
-                        Text("Add Budget View Coming Soon")
-                            .foregroundColor(.secondary)
-                    }
-                    .navigationTitle("New Budget")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") { showingAddBudget = false }
+                AddBudgetScreenView()
+                    .onDisappear {
+                        Task {
+                            await viewModel.refresh()
                         }
                     }
-                }
             }
         }
     }

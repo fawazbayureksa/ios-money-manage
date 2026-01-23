@@ -59,10 +59,10 @@ struct Budget: Decodable, Identifiable {
 struct PaginatedBudgetResponse: Decodable {
     let success: Bool
     let message: String?
-    let data: BudgetData?
+    let data: BudgetListData?
 }
 
-struct BudgetData: Decodable {
+struct BudgetListData: Decodable {
     let data: [Budget]?
     // Add other pagination fields if needed
     let currentPage: Int?
