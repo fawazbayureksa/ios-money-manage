@@ -206,29 +206,6 @@ private struct FormContent: View {
     }
 }
 
-// MARK: - Empty State Chip
-
-private struct EmptyStateChip: View {
-    let text: String
-    
-    var body: some View {
-        Text(text)
-            .font(.subheadline)
-            .foregroundColor(.secondary)
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemGray6))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [5]))
-                            .foregroundColor(.secondary.opacity(0.5))
-                    )
-            )
-    }
-}
-
 // MARK: - Action Buttons
 
 private struct ActionButtons: View {
