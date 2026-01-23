@@ -15,12 +15,12 @@ struct HeaderView: View {
                 // LEFT - Welcome text
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Welcome back")
-                        .font(.system(size: 14, weight: .medium))
+                        .font(.system(size: 24, weight: .medium))
                         .foregroundColor(.white)
                         .tracking(0.5)
-                    Text(username)
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
+                    // Text(username)
+                    //     .font(.system(size: 28, weight: .bold))
+                    //     .foregroundColor(.white)
                     Text("Let's manage your finances today 💰")
                            .font(.system(size: 15))
                            .foregroundColor(.white.opacity(0.9))
