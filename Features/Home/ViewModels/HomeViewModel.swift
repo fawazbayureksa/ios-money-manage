@@ -36,6 +36,9 @@ final class HomeViewModel: ObservableObject {
         do {
             dashboardData = try await fetchDashboardData()
         } catch {
+            if let urlError = error as? URLError, urlError.code == .cancelled {
+                return
+            }
             errorMessage = error.localizedDescription
         }
         
