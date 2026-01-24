@@ -22,6 +22,7 @@ struct ProfileScreenView: View {
                     VStack(spacing: 0) {
                         // Profile Header
                         ProfileHeaderView(username: "User")
+                            .padding(.top, 8)
                         
                         // Menu Items
                         VStack(spacing: 16) {
@@ -86,15 +87,15 @@ struct ProfileScreenView: View {
                                 )
                             }
                             
-                            // Logout Section
-                            MenuSectionView(title: "") {
-                                LogoutButtonView(logoutModel: logoutModel) {
-                                    authState.logoutSuccess()
-                                }
+                            // Logout Button (Standalone)
+                            LogoutButtonView(logoutModel: logoutModel) {
+                                authState.logoutSuccess()
                             }
+                            .padding(.top, 8)
                         }
                         .padding(.horizontal, 16)
                         .padding(.top, 20)
+                        .padding(.bottom, 40) // Extra padding for bottom-most item
                         
                         Spacer(minLength: 32)
                     }
@@ -123,8 +124,8 @@ private struct ProfileHeaderView: View {
     let username: String
     
     var body: some View {
-        VStack(spacing: 20) {
-            // Avatar
+        HStack(spacing: 20) {
+            // Avatar Column
             ZStack {
                 Circle()
                     .fill(
@@ -134,45 +135,84 @@ private struct ProfileHeaderView: View {
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 100, height: 100)
+                    .frame(width: 80, height: 80)
                 
                 Circle()
-                    .stroke(.white.opacity(0.3), lineWidth: 2)
-                    .frame(width: 100, height: 100)
+                    .stroke(.white.opacity(0.4), lineWidth: 3)
+                    .frame(width: 80, height: 80)
                 
                 Text(String(username.prefix(2)).uppercased())
-                    .font(.system(size: 36, weight: .bold))
+                    .font(.system(size: 28, weight: .bold))
                     .foregroundColor(.white)
             }
-            .shadow(color: .blue.opacity(0.3), radius: 12, x: 0, y: 6)
+            .shadow(color: .blue.opacity(0.4), radius: 10, x: 0, y: 5)
             
-            // User Info
-            VStack(spacing: 8) {
-                Text(username)
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
-                
-                Text("Premium Member")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+            // User Info Column
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(username)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                    
+                    Text("Premium Member")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .foregroundColor(.white.opacity(0.8))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Capsule().fill(.white.opacity(0.2)))
+                }
                 
                 HStack(spacing: 16) {
                     StatItemView(title: "Joined", value: "2024")
+                    Divider()
+                        .frame(height: 20)
+                        .background(Color.white.opacity(0.3))
                     StatItemView(title: "Budgets", value: "12")
+                    Divider()
+                        .frame(height: 20)
+                        .background(Color.white.opacity(0.3))
                     StatItemView(title: "Saved", value: "24%")
                 }
             }
+            
+            Spacer()
         }
-        .padding(.vertical, 32)
-        .padding(.horizontal, 20)
+        .padding(24)
         .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
+            ZStack {
+                // Background Gradient
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.12, green: 0.42, blue: 0.47), // Matching Home Header
+                        Color(red: 0.08, green: 0.32, blue: 0.36)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                
+                // Decorative Elements
+                GeometryReader { geo in
+                    ZStack {
+                        Circle()
+                            .fill(.white.opacity(0.1))
+                            .frame(width: 120, height: 120)
+                            .blur(radius: 20)
+                            .offset(x: geo.size.width * 0.8, y: -20)
+                        
+                        Circle()
+                            .fill(Color.purple.opacity(0.1))
+                            .frame(width: 80, height: 80)
+                            .blur(radius: 15)
+                            .offset(x: 20, y: geo.size.height * 0.7)
+                    }
+                }
+            }
         )
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .shadow(color: Color(red: 0.12, green: 0.42, blue: 0.47).opacity(0.3), radius: 12, x: 0, y: 8)
         .padding(.horizontal, 16)
-        .padding(.top, 16)
     }
 }
 
@@ -181,14 +221,15 @@ private struct StatItemView: View {
     let value: String
     
     var body: some View {
-        VStack(spacing: 4) {
+        VStack(alignment: .leading, spacing: 2) {
             Text(value)
-                .font(.headline)
+                .font(.subheadline)
                 .fontWeight(.bold)
-                .foregroundColor(.primary)
+                .foregroundColor(.white)
             Text(title)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(.system(size: 10))
+                .fontWeight(.medium)
+                .foregroundColor(.white.opacity(0.7))
         }
     }
 }
@@ -306,31 +347,33 @@ private struct LogoutButtonView: View {
             HStack(spacing: 12) {
                 if logoutModel.isLoading {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .progressViewStyle(CircularProgressViewStyle(tint: .red))
                         .scaleEffect(0.9)
                 } else {
-                    Image(systemName: "power")
-                        .font(.system(size: 18, weight: .semibold))
+                    Image(systemName: "power.circle.fill")
+                        .font(.system(size: 22, weight: .semibold))
                 }
                 
                 Text("Sign Out")
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 16, weight: .bold))
+                    .tracking(0.5)
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .opacity(0.6)
+                    .font(.system(size: 14, weight: .bold))
+                    .opacity(0.5)
             }
-            .foregroundColor(.white)
+            .foregroundColor(.red)
             .padding(.horizontal, 20)
-            .padding(.vertical, 16)
+            .padding(.vertical, 18)
             .background(
-                LinearGradient(
-                    colors: [Color.red, Color.red.opacity(0.8)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(Color.red.opacity(0.1))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(Color.red.opacity(0.2), lineWidth: 1)
+                    )
             )
         }
         .disabled(logoutModel.isLoading)
