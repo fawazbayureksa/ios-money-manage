@@ -40,16 +40,14 @@ struct TransactionScreenView: View {
                         if viewModel.filteredTransactions.isEmpty {
                             TransactionEmptyView()
                         } else {
-                            ScrollView {
-                                TransactionListView(
-                                    transactions: viewModel.filteredTransactions,
-                                    onDelete: { transaction in
-                                        transactionToDelete = transaction
-                                        showDeleteAlert = true
-                                    }
-                                )
-                                .padding(.vertical, 16)
-                            }
+                            TransactionListView(
+                                viewModel: viewModel,
+                                onDelete: { transaction in
+                                    transactionToDelete = transaction
+                                    showDeleteAlert = true
+                                }
+                            )
+                            .padding(.vertical, 16)
                         }
                     }
                 }

@@ -14,11 +14,21 @@ final class TransactionViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     
+    // MARK: - Pagination Properties
+    @Published var currentPage = 1
+    @Published var hasMore = true
+    @Published var isLoadingMore = false
+    
     // MARK: - Filter Properties
     @Published var filterType: TransactionFilterType = .all
     @Published var categoryId: Int?
     @Published var startDate: Date?
     @Published var endDate: Date?
+    
+    private let pageSize = 20
+    
+    // Track total loaded count to prevent duplicates
+    private var loadedCount = 0
     
     // MARK: - Filtered Transactions
     var filteredTransactions: [Transaction] {
@@ -45,32 +55,105 @@ final class TransactionViewModel: ObservableObject {
         let success: Bool
         let message: String?
         let data: [Transaction]?
+        let page: Int?
+        let pageSize: Int?
+        let totalItems: Int?
+        let totalPages: Int?
+        
+        enum CodingKeys: String, CodingKey {
+            case success
+            case message
+            case data
+            case page
+            case pageSize = "page_size"
+            case totalItems = "total_items"
+            case totalPages = "total_pages"
+        }
+        
+        var pagination: PaginationInfo? {
+            guard let page = page,
+                  let pageSize = pageSize,
+                  let totalItems = totalItems,
+                  let totalPages = totalPages else {
+                return nil
+            }
+            return PaginationInfo(
+                currentPage: page,
+                totalPages: totalPages,
+                totalItems: totalItems,
+                itemsPerPage: pageSize
+            )
+        }
+    }
+    
+    struct PaginationInfo {
+        let currentPage: Int
+        let totalPages: Int
+        let totalItems: Int
+        let itemsPerPage: Int
+    }
+    
+    struct TransactionListData: Decodable {
+        let data: [Transaction]
+        let currentPage: Int?
+        let lastPage: Int?
+        let total: Int?
+        
+        enum CodingKeys: String, CodingKey {
+            case data
+            case currentPage = "current_page"
+            case lastPage = "last_page"
+            case total
+        }
     }
     
     // MARK: - Fetch Transactions
     
-    func fetchTransactions() {
-        isLoading = true
+    func fetchTransactions(reset: Bool = true) {
+        print("📄 fetchTransactions called - reset: \(reset), currentPage: \(currentPage)")
+        
+        if reset {
+            currentPage = 1
+            hasMore = true
+            isLoading = true
+            loadedCount = 0
+            print("🔄 Reset: currentPage=1, hasMore=true, loadedCount=0")
+        } else {
+            isLoadingMore = true
+            print("⬇️ Loading more: page=\(currentPage + 1)")
+        }
         errorMessage = nil
         
-        guard let url = URL(string: "\(AppConfig.apiBaseURL)/transactions") else {
+        var urlComponents = URLComponents(string: "\(AppConfig.apiBaseURL)/transactions")
+        urlComponents?.queryItems = buildQueryItems()
+        
+        guard let url = urlComponents?.url else {
             isLoading = false
+            isLoadingMore = false
             errorMessage = "Invalid URL"
             return
         }
-        print(url)
+        
         var request = URLRequest(url: url)
-        let token =  TokenManager.shared.getToken() ?? ""
+        let token = TokenManager.shared.getToken() ?? ""
         request.httpMethod = "GET"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-     
+        
+        print("📡 Fetching transactions from: \(url.absoluteString)")
+        
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             DispatchQueue.main.async {
                 self?.isLoading = false
+                self?.isLoadingMore = false
                 
                 if let error = error {
+                    if let urlError = error as? URLError, urlError.code == .cancelled {
+                        print("✅ Request cancelled - ignoring error")
+                        return
+                    }
                     self?.errorMessage = error.localizedDescription
+                    print("❌ Error: \(error.localizedDescription)")
                     return
                 }
                 
@@ -79,13 +162,45 @@ final class TransactionViewModel: ObservableObject {
                     return
                 }
                 
+                // Debug: Print raw response
+                if let jsonString = String(data: data, encoding: .utf8) {
+                    print("📥 Raw API Response: \(jsonString)")
+                }
+                
                 do {
                     let decoded = try JSONDecoder().decode(TransactionResponse.self, from: data)
-                    print(decoded)
-                    if decoded.success {
-                        self?.transactions = decoded.data ?? []
+                    print("📦 Decoded success: \(decoded.success)")
+                    
+                    if decoded.success, let responseData = decoded.data {
+                        print("📊 Received \(responseData.count) transactions")
+                        
+                        // Prevent duplicates by checking if we've already seen these transactions
+                        let existingIds = Set(self?.transactions.map { $0.id } ?? [])
+                        let newTransactions = responseData.filter { !existingIds.contains($0.id) }
+                        print("✅ Filtered duplicates: \(newTransactions.count) unique transactions")
+                        
+                        if reset {
+                            self?.transactions = newTransactions
+                            self?.loadedCount = newTransactions.count
+                            print("🔄 Reset - set \(newTransactions.count) transactions")
+                        } else {
+                            self?.transactions.append(contentsOf: newTransactions)
+                            self?.loadedCount += newTransactions.count
+                            print("➕ Appended \(newTransactions.count) transactions (total: \(self?.transactions.count ?? 0))")
+                        }
+                        
+                        // Update hasMore based on pagination info
+                        if let pagination = decoded.pagination {
+                            self?.hasMore = pagination.currentPage < pagination.totalPages
+                            print("📄 Pagination: page \(pagination.currentPage)/\(pagination.totalPages), total items: \(pagination.totalItems)")
+                        } else {
+                            // Fallback: assume more if we got full page
+                            self?.hasMore = responseData.count >= (self?.pageSize ?? 20)
+                            print("⚠️ No pagination info - using fallback logic")
+                        }
                     } else {
                         self?.errorMessage = decoded.message ?? "Failed to fetch transactions"
+                        print("❌ API returned success=false")
                     }
                 } catch {
                     print("❌ Decode error:", error)
@@ -95,6 +210,68 @@ final class TransactionViewModel: ObservableObject {
         }.resume()
     }
     
+    // MARK: - Build Query Items
+    
+    private func buildQueryItems() -> [URLQueryItem] {
+        var items: [URLQueryItem] = []
+        
+        items.append(URLQueryItem(name: "page", value: "\(currentPage)"))
+        items.append(URLQueryItem(name: "limit", value: "\(pageSize)"))
+        
+        if let typeValue = filterType.transactionTypeValue {
+            items.append(URLQueryItem(name: "transaction_type", value: "\(typeValue)"))
+        }
+        
+        if let catId = categoryId {
+            items.append(URLQueryItem(name: "category_id", value: "\(catId)"))
+        }
+        
+        if let start = startDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            items.append(URLQueryItem(name: "start_date", value: formatter.string(from: start)))
+        }
+        
+        if let end = endDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd"
+            items.append(URLQueryItem(name: "end_date", value: formatter.string(from: end)))
+        }
+        
+        return items
+    }
+    
+    // MARK: - Load More (Infinite Scroll)
+    
+    func loadMoreTransactions() {
+        guard !isLoading && !isLoadingMore && hasMore else {
+            return
+        }
+        
+        currentPage += 1
+        fetchTransactions(reset: false)
+    }
+    
+    // MARK: - Refresh
+    
+    func refreshTransactions() {
+        print("🔄 Refresh triggered")
+        fetchTransactions(reset: true)
+    }
+    
+    // MARK: - Reset
+    
+    func resetFilters() {
+        filterType = .all
+        categoryId = nil
+        startDate = nil
+        endDate = nil
+        transactions = []
+        currentPage = 1
+        hasMore = true
+        loadedCount = 0
+    }
+    
     // MARK: - Delete Transaction
     
     func deleteTransaction(_ transaction: Transaction) {
@@ -102,7 +279,7 @@ final class TransactionViewModel: ObservableObject {
             errorMessage = "Invalid URL"
             return
         }
-        let token =  TokenManager.shared.getToken() ?? ""
+        let token = TokenManager.shared.getToken() ?? ""
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
