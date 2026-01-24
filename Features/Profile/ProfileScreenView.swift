@@ -21,7 +21,7 @@ struct ProfileScreenView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         // Profile Header
-                        ProfileHeaderView(username: "User")
+                        ProfileHeaderView(username: authState.user?.name ?? "User")
                             .padding(.top, 8)
                         
                         // Menu Items

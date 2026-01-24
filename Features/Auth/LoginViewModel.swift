@@ -19,6 +19,9 @@ final class LoginViewModel: ObservableObject {
     // Callback for success
     var onLoginSuccess: (() -> Void)?
     
+    // Reference to AuthState
+    weak var authState: AuthState?
+    
     // Basic validation
     var isValid: Bool {
         !email.isEmpty && !password.isEmpty
@@ -105,11 +108,16 @@ final class LoginViewModel: ObservableObject {
                     if decoded.success {
                         print("✅ Login success")
                         if let loginData = decoded.data {
+                            // Save token
                             if let token = decoded.data?.token {
                                 TokenManager.shared.saveToken(token)
                             }
+                            
+                            // Set user data in AuthState
+                            self?.authState?.loginSuccess(user: loginData.user)
                         }
-                         self?.onLoginSuccess?()
+                        
+                        self?.onLoginSuccess?()
                     } else {
                         self?.errorMessage = decoded.message ?? "Login failed"
                     }
