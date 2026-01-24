@@ -7,6 +7,7 @@
 import SwiftUI
 
 struct HomeScreenView: View {
+    @EnvironmentObject var authState: AuthState
     @StateObject private var viewModel = HomeViewModel()
     
     var body: some View {
@@ -22,7 +23,7 @@ struct HomeScreenView: View {
                     ScrollView {
                         VStack(spacing: 0) {
                             // Header
-                            HeaderView(username: viewModel.username)
+                            HeaderView(username: authState.user?.name ?? "User")
                             
                             // Dashboard Content
                             if let data = viewModel.dashboardData {
@@ -50,8 +51,17 @@ struct HomeScreenView: View {
                 Text(viewModel.errorMessage ?? "An error occurred")
             }
             .onAppear {
+                // Pass the username to viewModel
+                viewModel.setUsername(authState.user?.name ?? "User")
+                
                 Task {
                     await viewModel.fetchDashboard()
+                }
+            }
+            .onChange(of: authState.user?.name) { _, newName in
+                // Update username in viewModel when it changes in authState
+                if let name = newName {
+                    viewModel.setUsername(name)
                 }
             }
         }
@@ -289,7 +299,7 @@ private struct TopCategoriesSection: View {
             }
             
             VStack(spacing: 12) {
-                ForEach(Array(categories.prefix(5).enumerated()), id: \.element.id) { index, category in
+                ForEach(Array(categories.prefix(5).enumerated()), id: \.offset) { index, category in
                     CategoryRow(
                         category: category,
                         index: index,
@@ -391,7 +401,7 @@ private struct BudgetOverviewSection: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
                 Spacer()
-                Image(systemName: "wallet")
+                Image(systemName: "wallet.bifold")
                     .foregroundColor(.purple)
             }
             
@@ -741,8 +751,7 @@ private struct EmptyStateView: View {
     }
 }
 
-// MARK: - Preview
-
 #Preview {
     HomeScreenView()
+        .environmentObject(AuthState())
 }

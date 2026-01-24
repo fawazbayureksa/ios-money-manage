@@ -158,11 +158,11 @@ struct LoginView: View {
             UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
         }
         .onAppear {
+            // Set authState reference in viewModel
+            viewModel.authState = authState
+            
             viewModel.onLoginSuccess = {
-                // Ensure UI update happens on main thread
-                DispatchQueue.main.async {
-                    authState.loginSuccess()
-                }
+                // UI update happens automatically through AuthState @Published property
             }
         }
     }
@@ -170,4 +170,5 @@ struct LoginView: View {
 
 #Preview {
     LoginView()
+        .environmentObject(AuthState())
 }

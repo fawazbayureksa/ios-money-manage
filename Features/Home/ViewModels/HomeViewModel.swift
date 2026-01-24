@@ -16,10 +16,18 @@ final class HomeViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showAmounts = false
     
-    // User info
+    // User info - gets username from AuthState
     var username: String {
-        UserDefaults.standard.string(forKey: "username") ?? 
-        UserDefaults.standard.string(forKey: "email")?.components(separatedBy: "@").first ?? "User"
+        // This will be injected from the view
+        return _username ?? "User"
+    }
+    
+    // Private backing store for username
+    private var _username: String?
+    
+    // Method to set username from view
+    func setUsername(_ name: String) {
+        _username = name
     }
     
     private let token = TokenManager.shared.getToken() ?? ""

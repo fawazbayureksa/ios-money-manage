@@ -8,10 +8,12 @@
 import Foundation
 import SwiftUI
 import Combine
+
 @MainActor
 final class AuthState: ObservableObject {
 
     @Published var isLoggedIn: Bool = false
+    @Published var user: LoginViewModel.User? = nil
 
     init() {
         checkLogin()
@@ -21,16 +23,20 @@ final class AuthState: ObservableObject {
         // Check if token exists
         if let token = TokenManager.shared.getToken(), !token.isEmpty {
             isLoggedIn = true
+            // TODO: Fetch user info from API or local storage if needed
         } else {
             isLoggedIn = false
+            user = nil
         }
     }
 
-    func loginSuccess() {
+    func loginSuccess(user: LoginViewModel.User) {
         isLoggedIn = true
+        self.user = user
     }
 
     func logoutSuccess() {
         isLoggedIn = false
+        user = nil
     }
 }
