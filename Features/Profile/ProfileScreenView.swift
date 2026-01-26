@@ -9,7 +9,9 @@ import SwiftUI
 struct ProfileScreenView: View {
     @EnvironmentObject var authState: AuthState
     @StateObject private var logoutModel = LogoutModel()
-    @State private var budgetAlertCount = 3 // Mock data for unread alerts
+    @StateObject private var alertViewModel = BudgetAlertViewModel()
+    @State private var showBudgetAlerts = false
+    @State private var budgetAlertCount = 0
     
     var body: some View {
         NavigationStack {
@@ -34,8 +36,8 @@ struct ProfileScreenView: View {
                                     description: "View and manage budget notifications",
                                     badgeCount: budgetAlertCount,
                                     color: .orange,
-                                    action: { 
-                                        print("Budget Alerts tapped")
+                                    action: {
+                                        showBudgetAlerts = true
                                     }
                                 )
                                 
@@ -103,6 +105,14 @@ struct ProfileScreenView: View {
             }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(isPresented: $showBudgetAlerts) {
+                BudgetAlertScreenView(
+                    viewModel: alertViewModel,
+                    onUnreadCountChanged: { newCount in
+                        budgetAlertCount = newCount
+                    }
+                )
+            }
             .alert("Sign Out", isPresented: $logoutModel.showLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Sign Out", role: .destructive) {
@@ -114,6 +124,22 @@ struct ProfileScreenView: View {
             } message: {
                 Text("Are you sure you want to sign out?")
             }
+            .task {
+                await fetchUnreadAlertCount()
+            }
+            .refreshable {
+                await fetchUnreadAlertCount()
+            }
+        }
+    }
+    
+    // MARK: - Fetch Unread Alert Count
+    
+    private func fetchUnreadAlertCount() async {
+        do {
+            budgetAlertCount = try await AlertService.shared.getUnreadCount()
+        } catch {
+            budgetAlertCount = 0
         }
     }
 }
@@ -381,4 +407,8 @@ private struct LogoutButtonView: View {
             logoutModel.onLogoutSuccess = onLogoutSuccess
         }
     }
+}
+
+#Preview{
+    ProfileScreenView()
 }
