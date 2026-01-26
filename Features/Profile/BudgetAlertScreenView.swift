@@ -12,14 +12,16 @@ import Foundation
 struct BudgetAlertScreenView: View {
     @StateObject private var viewModel: BudgetAlertViewModel
     @Environment(\.dismiss) private var dismiss
+    var onUnreadCountChanged: ((Int) -> Void)?
     
     // Optional initializer for when viewModel is passed from ProfileScreenView
-    init(viewModel: BudgetAlertViewModel? = nil) {
+    init(viewModel: BudgetAlertViewModel? = nil, onUnreadCountChanged: ((Int) -> Void)? = nil) {
         if let viewModel = viewModel {
             self._viewModel = StateObject(wrappedValue: viewModel)
         } else {
             self._viewModel = StateObject(wrappedValue: BudgetAlertViewModel())
         }
+        self.onUnreadCountChanged = onUnreadCountChanged
     }
     
     var body: some View {
@@ -42,7 +44,10 @@ struct BudgetAlertScreenView: View {
                                 Task { await viewModel.refresh() }
                             },
                             onMarkAllRead: {
-                                Task { await viewModel.markAllAsRead() }
+                                Task { 
+                                    await viewModel.markAllAsRead()
+                                    await refreshUnreadCount()
+                                }
                             }
                         )
                         .background(Color(.systemBackground))
@@ -57,6 +62,7 @@ struct BudgetAlertScreenView: View {
                                         AlertCard(alert: alert) {
                                             Task {
                                                 await viewModel.markAsRead(alertId: alert.id)
+                                                await refreshUnreadCount()
                                             }
                                         }
                                     }
@@ -80,6 +86,7 @@ struct BudgetAlertScreenView: View {
                             }
                             .refreshable {
                                 await viewModel.refresh()
+                                await refreshUnreadCount()
                             }
                             
                             // Load more trigger
@@ -101,7 +108,10 @@ struct BudgetAlertScreenView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
-                        Task { await viewModel.refresh() }
+                        Task { 
+                            await viewModel.refresh()
+                            await refreshUnreadCount()
+                        }
                     } label: {
                         Image(systemName: "arrow.clockwise")
                     }
@@ -133,8 +143,23 @@ struct BudgetAlertScreenView: View {
                     // Use mock data for now, replace with API call when ready
                     // await viewModel.fetchAlerts()
                     viewModel.loadMockData()
+                    await refreshUnreadCount()
                 }
             }
+        }
+    }
+    
+    // MARK: - Refresh Unread Count
+    
+    private func refreshUnreadCount() async {
+        guard let onUnreadCountChanged = onUnreadCountChanged else { return }
+        do {
+            let unreadCount = try await AlertService.shared.getUnreadCount()
+            await MainActor.run {
+                onUnreadCountChanged(unreadCount)
+            }
+        } catch {
+            // Silently fail - the count will update on next profile view appearance
         }
     }
 }

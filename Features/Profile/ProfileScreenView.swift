@@ -11,11 +11,7 @@ struct ProfileScreenView: View {
     @StateObject private var logoutModel = LogoutModel()
     @StateObject private var alertViewModel = BudgetAlertViewModel()
     @State private var showBudgetAlerts = false
-    
-    // Computed property for unread alert count
-    private var budgetAlertCount: Int {
-        alertViewModel.alerts.filter { !$0.isRead }.count
-    }
+    @State private var budgetAlertCount = 0
     
     var body: some View {
         NavigationStack {
@@ -110,7 +106,12 @@ struct ProfileScreenView: View {
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
             .navigationDestination(isPresented: $showBudgetAlerts) {
-                BudgetAlertScreenView(viewModel: alertViewModel)
+                BudgetAlertScreenView(
+                    viewModel: alertViewModel,
+                    onUnreadCountChanged: { newCount in
+                        budgetAlertCount = newCount
+                    }
+                )
             }
             .alert("Sign Out", isPresented: $logoutModel.showLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -124,9 +125,21 @@ struct ProfileScreenView: View {
                 Text("Are you sure you want to sign out?")
             }
             .task {
-                // Fetch budget alerts to get real unread count
-                await alertViewModel.fetchAlerts()
+                await fetchUnreadAlertCount()
             }
+            .refreshable {
+                await fetchUnreadAlertCount()
+            }
+        }
+    }
+    
+    // MARK: - Fetch Unread Alert Count
+    
+    private func fetchUnreadAlertCount() async {
+        do {
+            budgetAlertCount = try await AlertService.shared.getUnreadCount()
+        } catch {
+            budgetAlertCount = 0
         }
     }
 }
