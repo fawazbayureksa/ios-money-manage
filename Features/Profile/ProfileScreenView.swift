@@ -9,7 +9,13 @@ import SwiftUI
 struct ProfileScreenView: View {
     @EnvironmentObject var authState: AuthState
     @StateObject private var logoutModel = LogoutModel()
-    @State private var budgetAlertCount = 3 // Mock data for unread alerts
+    @StateObject private var alertViewModel = BudgetAlertViewModel()
+    @State private var showBudgetAlerts = false
+    
+    // Computed property for unread alert count
+    private var budgetAlertCount: Int {
+        alertViewModel.alerts.filter { !$0.isRead }.count
+    }
     
     var body: some View {
         NavigationStack {
@@ -34,8 +40,8 @@ struct ProfileScreenView: View {
                                     description: "View and manage budget notifications",
                                     badgeCount: budgetAlertCount,
                                     color: .orange,
-                                    action: { 
-                                        print("Budget Alerts tapped")
+                                    action: {
+                                        showBudgetAlerts = true
                                     }
                                 )
                                 
@@ -103,6 +109,9 @@ struct ProfileScreenView: View {
             }
             .navigationTitle("Profile")
             .navigationBarTitleDisplayMode(.large)
+            .navigationDestination(isPresented: $showBudgetAlerts) {
+                BudgetAlertScreenView(viewModel: alertViewModel)
+            }
             .alert("Sign Out", isPresented: $logoutModel.showLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Sign Out", role: .destructive) {
@@ -113,6 +122,10 @@ struct ProfileScreenView: View {
                 }
             } message: {
                 Text("Are you sure you want to sign out?")
+            }
+            .task {
+                // Fetch budget alerts to get real unread count
+                await alertViewModel.fetchAlerts()
             }
         }
     }
@@ -381,4 +394,8 @@ private struct LogoutButtonView: View {
             logoutModel.onLogoutSuccess = onLogoutSuccess
         }
     }
+}
+
+#Preview{
+    ProfileScreenView()
 }
