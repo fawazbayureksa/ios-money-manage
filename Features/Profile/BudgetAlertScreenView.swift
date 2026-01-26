@@ -140,9 +140,7 @@ struct BudgetAlertScreenView: View {
             // Only load mock data if viewModel is empty and wasn't pre-loaded from ProfileScreenView
             if viewModel.alerts.isEmpty {
                 Task {
-                    // Use mock data for now, replace with API call when ready
-                    // await viewModel.fetchAlerts()
-                    viewModel.loadMockData()
+                    await viewModel.fetchAlerts()
                     await refreshUnreadCount()
                 }
             }
@@ -298,7 +296,7 @@ private struct AlertCard: View {
                         .fill(alert.alertColor.opacity(0.15))
                         .frame(width: 52, height: 52)
                     
-                    Image(systemName: alert.alertIconName)
+                    Image(systemName: "bell.badge")
                         .font(.system(size: 24, weight: .semibold))
                         .foregroundColor(alert.alertColor)
                 }

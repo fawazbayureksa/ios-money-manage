@@ -73,6 +73,9 @@ struct BudgetAlert: Identifiable, Decodable {
         }
     }
     
+    // Default alert icon
+    static let defaultIconName = "bell.fill"
+    
     // Alert icon name
     var alertIconName: String {
         switch alertLevel {
