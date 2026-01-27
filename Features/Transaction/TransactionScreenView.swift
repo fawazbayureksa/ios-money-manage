@@ -11,6 +11,7 @@ struct TransactionScreenView: View {
     @StateObject private var viewModel = TransactionViewModel()
     @State private var showDeleteAlert = false
     @State private var transactionToDelete: Transaction?
+    @State private var hasInitialized = false
     
     var body: some View {
         NavigationView {
@@ -18,7 +19,7 @@ struct TransactionScreenView: View {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
                 
-                if viewModel.isLoading {
+                if viewModel.isLoading && viewModel.filteredTransactions.isEmpty {
                     ProgressView("Loading...")
                 } else {
                     VStack(spacing: 0) {
@@ -32,6 +33,8 @@ struct TransactionScreenView: View {
                                     viewModel.startDate = nil
                                     viewModel.endDate = nil
                                 }
+                                // Refresh when filter changes
+                                viewModel.fetchTransactions()
                             }
                         )
                         .background(Color(.systemBackground))
@@ -55,7 +58,7 @@ struct TransactionScreenView: View {
             .navigationTitle("Transactions")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { viewModel.fetchTransactions() }) {
+                    Button(action: { viewModel.refreshTransactions() }) {
                         Image(systemName: "arrow.clockwise")
                     }
                 }
@@ -71,7 +74,11 @@ struct TransactionScreenView: View {
                 Text("Are you sure you want to delete this transaction?")
             }
             .onAppear {
-                 viewModel.fetchTransactions()
+                // Only fetch once on first appearance
+                if !hasInitialized {
+                    hasInitialized = true
+                    viewModel.fetchTransactions()
+                }
             }
         }
     }
