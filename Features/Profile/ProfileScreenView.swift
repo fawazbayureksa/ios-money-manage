@@ -11,6 +11,7 @@ struct ProfileScreenView: View {
     @StateObject private var logoutModel = LogoutModel()
     @StateObject private var alertViewModel = BudgetAlertViewModel()
     @State private var showBudgetAlerts = false
+    @State private var showWallets = false
     @State private var budgetAlertCount = 0
     
     var body: some View {
@@ -48,7 +49,7 @@ struct ProfileScreenView: View {
                                     badgeCount: nil,
                                     color: .purple,
                                     action: { 
-                                        print("Wallet & Assets tapped")
+                                        showWallets = true
                                     }
                                 )
                             }
@@ -112,6 +113,9 @@ struct ProfileScreenView: View {
                         budgetAlertCount = newCount
                     }
                 )
+            }
+            .navigationDestination(isPresented: $showWallets) {
+                WalletScreenView()
             }
             .alert("Sign Out", isPresented: $logoutModel.showLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
