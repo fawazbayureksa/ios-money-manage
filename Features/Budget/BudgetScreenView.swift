@@ -216,6 +216,14 @@ struct TransactionsForBudgetView: View {
                             }
                             .padding()
                         }
+                        
+                        if viewModel.hasMore {
+                            Color.clear
+                                .frame(height: 1)
+                                .onAppear {
+                                    viewModel.loadMoreTransactions()
+                                }
+                        }
                     }
                     .padding(.horizontal, 16)
                 }

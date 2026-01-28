@@ -191,15 +191,15 @@ private struct ProfileHeaderView: View {
                 }
                 
                 HStack(spacing: 16) {
-                    StatItemView(title: "Joined", value: "2024")
-                    Divider()
-                        .frame(height: 20)
-                        .background(Color.white.opacity(0.3))
-                    StatItemView(title: "Budgets", value: "12")
-                    Divider()
-                        .frame(height: 20)
-                        .background(Color.white.opacity(0.3))
-                    StatItemView(title: "Saved", value: "24%")
+                    StatItemView(title: "Joined", value: "2026")
+                    // Divider()
+                    //     .frame(height: 20)
+                    //     .background(Color.white.opacity(0.3))
+                    // StatItemView(title: "Budgets", value: "10")
+                    // Divider()
+                    //     .frame(height: 20)
+                    //     .background(Color.white.opacity(0.3))
+                    // StatItemView(title: "Saved", value: "24%")
                 }
             }
             
@@ -410,5 +410,5 @@ private struct LogoutButtonView: View {
 }
 
 #Preview{
-    ProfileScreenView()
+    ProfileScreenView().environmentObject(AuthState())
 }
