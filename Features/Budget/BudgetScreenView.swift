@@ -201,7 +201,11 @@ struct TransactionsForBudgetView: View {
                 ScrollView {
                     LazyVStack(spacing: 10) {
                         ForEach(viewModel.transactions) { transaction in
-                            TransactionCardView(transaction: transaction)
+                            TransactionCardView(
+                                transaction: transaction,
+                                onDelete: nil,
+                                onUpdate: nil
+                            )
                         }
                         
                         if viewModel.isLoadingMore {

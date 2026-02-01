@@ -48,6 +48,10 @@ struct TransactionScreenView: View {
                                 onDelete: { transaction in
                                     transactionToDelete = transaction
                                     showDeleteAlert = true
+                                },
+                                onUpdate: { transaction in
+                                    // Handle transaction update
+                                    // TODO: Implement update functionality
                                 }
                             )
                             .padding(.vertical, 16)

@@ -10,9 +10,14 @@ import SwiftUI
 struct TransactionCardView: View {
     let transaction: Transaction
     var onDelete: (() -> Void)?
+    var onUpdate: (() -> Void)?
     
     private var typeColor: Color {
         transaction.isIncome ? .green : .red
+    }
+    
+    private var assetInfoColor: Color {
+        Color(hex: transaction.assetColor) ?? .blue
     }
     
     var body: some View {
@@ -37,21 +42,48 @@ struct TransactionCardView: View {
                 
                 Spacer()
                 
-                // Delete Button
-                Button(action: { onDelete?() }) {
-                    Image(systemName: "trash")
-                        .foregroundColor(.red)
-                        .padding(8)
+                // Action Buttons
+                HStack(spacing: 8) {
+                    if onUpdate != nil {
+                        Button(action: { onUpdate?() }) {
+                            Image(systemName: "pencil")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                                .padding(8)
+                        }
+                    }
+                    
+                    if onDelete != nil {
+                        Button(action: { onDelete?() }) {
+                            Image(systemName: "trash")
+                                .font(.caption)
+                                .foregroundColor(.red)
+                                .padding(8)
+                        }
+                    }
                 }
             }
             
-            // Chips Row
+            // Chips Row - V2: Show asset info
             HStack(spacing: 8) {
-                if let bankName = transaction.bankName {
+                // Asset Chip (V2) - Priority over bank name
+                if let assetName = transaction.assetName {
+                    ChipView(icon: "calendar", text: formatDateShort(transaction.date))
+                    AssetChipView(
+                        iconName: transaction.assetIconName ?? "wallet.bifold",
+                        text: assetName,
+                        color: assetInfoColor
+                    )
+                    
+                    // Show balance if available
+                    // if let balance = transaction.formattedAssetBalance {
+                    //     BalanceChipView(balance: balance)
+                    // }
+                } else if let bankName = transaction.bankName {
+                    // Fallback to V1 bank name
                     ChipView(icon: "building.columns", text: bankName)
                 }
                 
-                ChipView(icon: "calendar", text: formatDateShort(transaction.date))
             }
             
             // Description
@@ -155,12 +187,89 @@ struct ChipView: View {
     }
 }
 
+// MARK: - Asset Chip View (V2)
+
+struct AssetChipView: View {
+    let iconName: String
+    let text: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: iconName)
+                .font(.caption)
+                .foregroundColor(color)
+            
+            Text(text)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(color)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(color.opacity(0.1))
+        .cornerRadius(16)
+    }
+}
+
+// MARK: - Balance Chip View (V2)
+
+struct BalanceChipView: View {
+    let balance: String
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "dollarsign.circle")
+                .font(.caption)
+                .foregroundColor(.green)
+            
+            Text(balance)
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundColor(.green)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.green.opacity(0.1))
+        .cornerRadius(16)
+    }
+}
+
+// MARK: - Color Extension for Hex Support
+
+extension Color {
+    init?(hex: String?) {
+        guard let hex = hex, !hex.isEmpty else { return nil }
+        
+        var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
+        hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
+        
+        var rgb: UInt64 = 0
+        
+        guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else { return nil }
+        
+        let red = Double((rgb & 0xFF0000) >> 16) / 255.0
+        let green = Double((rgb & 0x00FF00) >> 8) / 255.0
+        let blue = Double(rgb & 0x0000FF) / 255.0
+        
+        self.init(red: red, green: green, blue: blue)
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
     VStack(spacing: 16) {
-        TransactionCardView(transaction: Transaction.mockData[0])
-        TransactionCardView(transaction: Transaction.mockData[1])
+        TransactionCardView(
+            transaction: Transaction.mockData[0],
+            onDelete: nil,
+            onUpdate: nil
+        )
+        TransactionCardView(
+            transaction: Transaction.mockData[1],
+            onDelete: nil,
+            onUpdate: nil
+        )
     }
     .padding()
     .background(Color(.systemGroupedBackground))

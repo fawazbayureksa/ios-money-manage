@@ -165,26 +165,26 @@ private struct FormContent: View {
                 FormErrorText(error: viewModel.categoryError)
             }
             
-            // Bank
+            // Wallet
             VStack(alignment: .leading, spacing: 12) {
-                FormSectionHeader(title: "Bank Account", isRequired: true)
+                FormSectionHeader(title: "Wallet", isRequired: true)
                 
-                if viewModel.banks.isEmpty {
-                    EmptyStateChip(text: "No banks available")
+                if viewModel.wallets.isEmpty {
+                    EmptyStateChip(text: "No wallets available")
                 } else {
                     SelectableChipGroup(
-                        items: viewModel.banks,
-                        selectedItem: viewModel.selectedBank,
-                        titleKeyPath: \.bankName,
-                        onSelect: { bank in
-                            viewModel.selectedBank = bank
-                            viewModel.bankError = nil
+                        items: viewModel.wallets,
+                        selectedItem: viewModel.selectedWallet,
+                        titleKeyPath: \.name,
+                        onSelect: { wallet in
+                            viewModel.selectedWallet = wallet
+                            viewModel.walletError = nil
                         },
                         useFlexibleLayout: true
                     )
                 }
                 
-                FormErrorText(error: viewModel.bankError)
+                FormErrorText(error: viewModel.walletError)
             }
             
             // Date

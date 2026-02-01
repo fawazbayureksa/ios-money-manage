@@ -36,7 +36,7 @@ struct ProfileScreenView: View {
                                     title: "Budget Alerts",
                                     description: "View and manage budget notifications",
                                     badgeCount: budgetAlertCount,
-                                    color: .orange,
+                                    color: Color(.orange),
                                     action: {
                                         showBudgetAlerts = true
                                     }
@@ -290,7 +290,7 @@ private struct MenuSectionView<Content: View>: View {
             }
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white)
+                    .fill(Color(UIColor.secondarySystemBackground))
                     .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
             )
         }

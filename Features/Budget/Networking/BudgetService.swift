@@ -13,7 +13,7 @@ class BudgetService {
     private init() {}
     
     func getBudgets() async throws -> [Budget] {
-        guard let url = URL(string: "\(AppConfig.apiBaseURL)/budgets") else {
+        guard let url = URL(string: "\(AppConfig.apiBaseURL)/budgets?page_size=100") else {
             throw URLError(.badURL)
         }
         
