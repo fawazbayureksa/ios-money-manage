@@ -86,6 +86,69 @@ struct Wallet: Identifiable, Decodable, Encodable {
             return .gray
         }
     }
+    
+    static let mockData: [Wallet] = [
+        Wallet(
+            id: 1,
+            userId: 1,
+            name: "Main Checking",
+            type: .bank,
+            balance: 5420.50,
+            currency: "USD",
+            bankName: "Chase Bank",
+            accountNo: "1234567890",
+            createdAt: "2024-01-15T10:30:00Z",
+            updatedAt: "2024-01-20T14:22:00Z"
+        ),
+        Wallet(
+            id: 2,
+            userId: 1,
+            name: "Cash Wallet",
+            type: .cash,
+            balance: 350.00,
+            currency: "USD",
+            bankName: nil,
+            accountNo: nil,
+            createdAt: "2024-01-10T08:15:00Z",
+            updatedAt: "2024-01-25T09:45:00Z"
+        ),
+        Wallet(
+            id: 3,
+            userId: 1,
+            name: "Credit Card",
+            type: .card,
+            balance: -1200.00,
+            currency: "USD",
+            bankName: "American Express",
+            accountNo: "4111111111111111",
+            createdAt: "2024-01-05T16:20:00Z",
+            updatedAt: "2024-01-22T11:30:00Z"
+        ),
+        Wallet(
+            id: 4,
+            userId: 1,
+            name: "PayPal",
+            type: .onlineWallet,
+            balance: 875.25,
+            currency: "USD",
+            bankName: nil,
+            accountNo: nil,
+            createdAt: "2024-01-12T13:00:00Z",
+            updatedAt: "2024-01-23T15:10:00Z"
+        ),
+        Wallet(
+            id: 5,
+            userId: 1,
+            name: "Investment Account",
+            type: .investment,
+            balance: 12500.00,
+            currency: "USD",
+            bankName: "Fidelity",
+            accountNo: "987654321",
+            createdAt: "2023-12-01T09:00:00Z",
+            updatedAt: "2024-01-24T10:05:00Z"
+        )
+    ]
 }
 
 enum WalletType: String, Codable, CaseIterable {

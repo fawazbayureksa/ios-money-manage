@@ -10,6 +10,7 @@ import SwiftUI
 struct TransactionListView: View {
     @ObservedObject var viewModel: TransactionViewModel
     var onDelete: ((Transaction) -> Void)?
+    var onUpdate: ((Transaction) -> Void)?
     
     var body: some View {
         ScrollView {
@@ -17,7 +18,8 @@ struct TransactionListView: View {
                 ForEach(viewModel.filteredTransactions) { transaction in
                     TransactionCardView(
                         transaction: transaction,
-                        onDelete: { onDelete?(transaction) }
+                        onDelete: { onDelete?(transaction) },
+                        onUpdate: { onUpdate?(transaction) }
                     )
                     .onAppear {
                         // Trigger load more when the last item appears
