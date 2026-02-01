@@ -68,6 +68,7 @@ struct TransactionCardView: View {
             HStack(spacing: 8) {
                 // Asset Chip (V2) - Priority over bank name
                 if let assetName = transaction.assetName {
+                    ChipView(icon: "calendar", text: formatDateShort(transaction.date))
                     AssetChipView(
                         iconName: transaction.assetIconName ?? "wallet.bifold",
                         text: assetName,
@@ -75,15 +76,14 @@ struct TransactionCardView: View {
                     )
                     
                     // Show balance if available
-                    if let balance = transaction.formattedAssetBalance {
-                        BalanceChipView(balance: balance)
-                    }
+                    // if let balance = transaction.formattedAssetBalance {
+                    //     BalanceChipView(balance: balance)
+                    // }
                 } else if let bankName = transaction.bankName {
                     // Fallback to V1 bank name
                     ChipView(icon: "building.columns", text: bankName)
                 }
                 
-                ChipView(icon: "calendar", text: formatDateShort(transaction.date))
             }
             
             // Description

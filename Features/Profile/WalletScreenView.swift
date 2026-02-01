@@ -347,10 +347,13 @@ private struct WalletCardView: View {
                 Spacer()
                 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text(showAmounts ? wallet.formattedBalance : "••••••••")
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
+                   Text(showAmounts ? wallet.formattedBalance : "••••••••")
+                    .font(.callout)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+
                     
                     HStack(spacing: 8) {
                         Button(action: onEdit) {
