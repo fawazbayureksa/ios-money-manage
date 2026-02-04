@@ -12,6 +12,7 @@ struct ProfileScreenView: View {
     @StateObject private var alertViewModel = BudgetAlertViewModel()
     @State private var showBudgetAlerts = false
     @State private var showWallets = false
+    @State private var showCategoryManagement = false
     @State private var budgetAlertCount = 0
     
     var body: some View {
@@ -39,6 +40,17 @@ struct ProfileScreenView: View {
                                     color: Color(.orange),
                                     action: {
                                         showBudgetAlerts = true
+                                    }
+                                )
+                                
+                                MenuItemView(
+                                    icon: "folder.badge.gearshape",
+                                    title: "Manage Categories",
+                                    description: "Create and manage expense/income categories",
+                                    badgeCount: nil,
+                                    color: .cyan,
+                                    action: {
+                                        showCategoryManagement = true
                                     }
                                 )
                                 
@@ -113,6 +125,9 @@ struct ProfileScreenView: View {
                         budgetAlertCount = newCount
                     }
                 )
+            }
+            .navigationDestination(isPresented: $showCategoryManagement) {
+                CategoryManagementScreenView()
             }
             .navigationDestination(isPresented: $showWallets) {
                 WalletScreenView()
