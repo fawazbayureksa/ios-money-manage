@@ -152,7 +152,8 @@ final class AddTransactionViewModel: ObservableObject {
                 guard let data = data else { return }
                 
                 do {
-                    let decoded = try JSONDecoder().decode(CategoriesResponse.self, from: data)
+                    let decoder = CategoryService.createDecoder()
+                    let decoded = try decoder.decode(CategoriesResponse.self, from: data)
                     if decoded.success {
                         self?.categories = decoded.data ?? []
                     }

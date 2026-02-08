@@ -75,7 +75,8 @@ final class AddBudgetViewModel: ObservableObject {
                 }
                 
                 do {
-                    let decoded = try JSONDecoder().decode(CategoriesResponse.self, from: data)
+                    let decoder = CategoryService.createDecoder()
+                    let decoded = try decoder.decode(CategoriesResponse.self, from: data)
                     if decoded.success {
                         self?.categories = decoded.data ?? []
                     }
