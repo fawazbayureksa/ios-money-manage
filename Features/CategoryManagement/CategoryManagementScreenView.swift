@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import Combine
+import Foundation
 
 struct CategoryManagementScreenView: View {
     @StateObject private var viewModel = CategoryManagementViewModel()
@@ -23,7 +25,10 @@ struct CategoryManagementScreenView: View {
                 } else if viewModel.categories.isEmpty {
                     EmptyStateView()
                 } else {
-                    CategoryListContent(viewModel: viewModel)
+                    CategoryListContent(
+                        viewModel: viewModel,
+                        scrollToTop: viewModel.scrollToTop
+                    )
                 }
             }
             .navigationTitle("Categories")
@@ -39,9 +44,7 @@ struct CategoryManagementScreenView: View {
                     }
                 }
             }
-            .refreshable {
-                await viewModel.fetchCategories()
-            }
+            .refreshable(action: refreshAction)
             .alert("Delete Category", isPresented: $viewModel.showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {
                     viewModel.categoryToDelete = nil
@@ -66,34 +69,51 @@ struct CategoryManagementScreenView: View {
                 }
             }
             .sheet(isPresented: $showAddCategory) {
-                AddCategoryScreenView(onSuccess: {
-                    showAddCategory = false
-                    Task {
-                        await viewModel.fetchCategories()
-                    }
-                })
+                AddCategoryScreenView(onSuccess: handleCategoryAdded)
             }
             .task {
                 await viewModel.fetchCategories()
             }
         }
     }
+    
+    private func handleCategoryAdded() {
+        showAddCategory = false
+        Task {
+            await viewModel.refreshCategories()
+        }
+    }
+    
+    private func refreshAction() async {
+        await viewModel.refreshCategories()
+    }
 }
 
 private struct CategoryListContent: View {
     @ObservedObject var viewModel: CategoryManagementViewModel
+    let scrollToTop: Bool
     
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(viewModel.categories) { category in
-                    CategoryCard(category: category) {
-                        viewModel.confirmDelete(category: category)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(viewModel.categories) { category in
+                        CategoryCard(category: category) {
+                            viewModel.confirmDelete(category: category)
+                        }
+                        .id(category.id)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            }
+            .onChange(of: scrollToTop) { oldValue, newValue in
+                if oldValue != newValue, let firstCategory = viewModel.categories.first {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(firstCategory.id, anchor: .top)
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
         }
     }
 }
@@ -146,7 +166,7 @@ private struct CategoryCard: View {
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(UIColor.secondarySystemBackground))
+                .fill(Color.secondary.opacity(0.1))
                 .shadow(color: .black.opacity(0.05), radius: 3, x: 0, y: 2)
         )
     }

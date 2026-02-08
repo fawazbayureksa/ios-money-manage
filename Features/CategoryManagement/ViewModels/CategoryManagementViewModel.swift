@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
 class CategoryManagementViewModel: ObservableObject {
@@ -15,19 +16,33 @@ class CategoryManagementViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var showDeleteConfirmation = false
     @Published var categoryToDelete: Category?
+    @Published var scrollToTop = false
+    
+    var showingError: Bool {
+        errorMessage != nil
+    }
     
     private let categoryService = CategoryService.shared
     
     func fetchCategories() async {
         isLoading = true
-        defer { isLoading = false }
         
         do {
             categories = try await categoryService.getCategories()
             errorMessage = nil
+        } catch is CancellationError {
+            errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
         }
+        
+        isLoading = false
+    }
+    
+    func refreshCategories() async {
+        await fetchCategories()
+        try? await Task.sleep(nanoseconds: 100_000_000)
+        scrollToTop.toggle()
     }
     
     func deleteCategory() async {

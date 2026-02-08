@@ -1,53 +1,50 @@
-//
-//  AddCategoryViewModel.swift
-//  money-manage
-//
-//  Created by Fawwaz Bayureksa on 04/02/26.
-//
-
 import Foundation
 import SwiftUI
+import Combine
 
 @MainActor
-class AddCategoryViewModel: ObservableObject {
+final class AddCategoryViewModel: ObservableObject {
     @Published var categoryName = ""
     @Published var categoryDescription = ""
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showAlert = false
     
+    // MARK: - Computed Properties
+    
     var isValid: Bool {
-        !categoryName.trimmingCharacters(in: .whitespaces).isEmpty &&
-        categoryName.count >= 2 &&
-        categoryDescription.count <= 200
+        !categoryName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && categoryDescription.count <= 200
     }
     
-    private let categoryService = CategoryService.shared
+    // MARK: - Methods
     
     func createCategory() async -> Bool {
-        guard isValid else { return false }
+        guard isValid else {
+            errorMessage = "Please enter a valid category name."
+            showAlert = true
+            return false
+        }
         
         isLoading = true
-        defer { isLoading = false }
+        errorMessage = nil
         
         do {
-            _ = try await categoryService.createCategory(
-                name: categoryName.trimmingCharacters(in: .whitespaces),
-                description: categoryDescription.trimmingCharacters(in: .whitespaces)
+            let trimmedName = categoryName.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedDescription = categoryDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+            
+            let _ = try await CategoryService.shared.createCategory(
+                name: trimmedName,
+                description: trimmedDescription
             )
-            errorMessage = nil
+            
+            isLoading = false
             return true
         } catch {
+            isLoading = false
             errorMessage = error.localizedDescription
             showAlert = true
             return false
         }
-    }
-    
-    func reset() {
-        categoryName = ""
-        categoryDescription = ""
-        errorMessage = nil
-        showAlert = false
     }
 }
