@@ -33,26 +33,35 @@ final class TransactionViewModel: ObservableObject {
     
     // MARK: - Filtered Transactions
     var filteredTransactions: [Transaction] {
-        transactions.filter { transaction in
-            // Filter by transaction type
-            if let typeValue = filterType.transactionTypeValue {
-                if transaction.transactionType != typeValue {
+        transactions
+            .filter { transaction in
+                // Filter by transaction type
+                if let typeValue = filterType.transactionTypeValue {
+                    if transaction.transactionType != typeValue {
+                        return false
+                    }
+                }
+                
+                // Filter by category (if set)
+                if let catId = categoryId, transaction.categoryId != catId {
                     return false
                 }
+                
+                // Filter by asset (if set) - V2
+                if let assetId = assetId, transaction.assetId != assetId {
+                    return false
+                }
+                
+                return true
             }
-            
-            // Filter by category (if set)
-            if let catId = categoryId, transaction.categoryId != catId {
-                return false
+            .sorted { first, second in
+                // Sort by date (newest first), then by ID (descending)
+                if first.date != second.date {
+                    return first.date > second.date
+                } else {
+                    return first.id > second.id
+                }
             }
-            
-            // Filter by asset (if set) - V2
-            if let assetId = assetId, transaction.assetId != assetId {
-                return false
-            }
-            
-            return true
-        }
     }
     
     // MARK: - API Response Models
@@ -183,16 +192,17 @@ final class TransactionViewModel: ObservableObject {
                     if decoded.success, let responseData = decoded.data {
                         print("📊 Received \(responseData.count) transactions")
                         
-                        // Prevent duplicates by checking if we've already seen these transactions
-                        let existingIds = Set(self?.transactions.map { $0.id } ?? [])
-                        let newTransactions = responseData.filter { !existingIds.contains($0.id) }
-                        print("✅ Filtered duplicates: \(newTransactions.count) unique transactions")
-                        
                         if reset {
-                            self?.transactions = newTransactions
-                            self?.loadedCount = newTransactions.count
-                            print("🔄 Reset - set \(newTransactions.count) transactions")
+                            // When resetting, replace all transactions with new data
+                            self?.transactions = responseData
+                            self?.loadedCount = responseData.count
+                            print("🔄 Reset - set \(responseData.count) transactions")
                         } else {
+                            // When loading more, prevent duplicates by filtering
+                            let existingIds = Set(self?.transactions.map { $0.id } ?? [])
+                            let newTransactions = responseData.filter { !existingIds.contains($0.id) }
+                            print("✅ Filtered duplicates: \(newTransactions.count) unique transactions out of \(responseData.count)")
+                            
                             self?.transactions.append(contentsOf: newTransactions)
                             self?.loadedCount += newTransactions.count
                             print("➕ Appended \(newTransactions.count) transactions (total: \(self?.transactions.count ?? 0))")
@@ -233,6 +243,10 @@ final class TransactionViewModel: ObservableObject {
         
         items.append(URLQueryItem(name: "page", value: "\(currentPage)"))
         items.append(URLQueryItem(name: "limit", value: "\(pageSize)"))
+        
+        // Add sorting parameters for consistent ordering
+        items.append(URLQueryItem(name: "sort_by", value: "date"))
+        items.append(URLQueryItem(name: "order", value: "desc"))
         
         if let typeValue = filterType.transactionTypeValue {
             items.append(URLQueryItem(name: "transaction_type", value: "\(typeValue)"))

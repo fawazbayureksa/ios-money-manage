@@ -23,7 +23,8 @@ struct TransactionListView: View {
                     )
                     .onAppear {
                         // Trigger load more when the last item appears
-                        if transaction.id == viewModel.transactions.last?.id {
+                        // FIX: Use filteredTransactions instead of transactions for pagination
+                        if transaction.id == viewModel.filteredTransactions.last?.id {
                             print("📜 Last item appeared - checking if should load more")
                             if viewModel.hasMore && !viewModel.isLoadingMore {
                                 print("📜 Loading more transactions...")
