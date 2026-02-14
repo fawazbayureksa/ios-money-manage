@@ -12,6 +12,7 @@ struct TransactionScreenView: View {
     @State private var showDeleteAlert = false
     @State private var transactionToDelete: Transaction?
     @State private var hasInitialized = false
+    @State private var showAdvancedFilter = false
     
     var body: some View {
         NavigationView {
@@ -39,6 +40,9 @@ struct TransactionScreenView: View {
                         )
                         .background(Color(.systemBackground))
                         
+                        // Active Filter Chips
+                        ActiveFilterChipsView(viewModel: viewModel)
+                        
                         // Transaction List
                         if viewModel.filteredTransactions.isEmpty {
                             TransactionEmptyView()
@@ -61,11 +65,24 @@ struct TransactionScreenView: View {
             }
             .navigationTitle("Transactions")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    FilterBadgeView(
+                        hasActiveFilters: viewModel.hasActiveAdvancedFilters,
+                        action: { showAdvancedFilter = true }
+                    )
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { viewModel.refreshTransactions() }) {
                         Image(systemName: "arrow.clockwise")
                     }
                 }
+            }
+            .sheet(isPresented: $showAdvancedFilter) {
+                AdvancedFilterView(
+                    isPresented: $showAdvancedFilter,
+                    viewModel: viewModel
+                )
             }
             .alert("Delete Transaction", isPresented: $showDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
@@ -82,6 +99,7 @@ struct TransactionScreenView: View {
                 if !hasInitialized {
                     hasInitialized = true
                     viewModel.fetchTransactions()
+                    viewModel.fetchCategories()
                 }
             }
         }

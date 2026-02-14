@@ -26,6 +26,10 @@ final class TransactionViewModel: ObservableObject {
     @Published var startDate: Date?
     @Published var endDate: Date?
     
+    // MARK: - Category Properties
+    @Published var categories: [Category] = []
+    @Published var isCategoriesLoading = false
+    
     private let pageSize = 20
     
     // Track total loaded count to prevent duplicates
@@ -35,22 +39,15 @@ final class TransactionViewModel: ObservableObject {
     var filteredTransactions: [Transaction] {
         transactions
             .filter { transaction in
-                // Filter by transaction type
+                // Filter by transaction type (client-side for immediate UI response)
                 if let typeValue = filterType.transactionTypeValue {
                     if transaction.transactionType != typeValue {
                         return false
                     }
                 }
                 
-                // Filter by category (if set)
-                if let catId = categoryId, transaction.categoryId != catId {
-                    return false
-                }
-                
-                // Filter by asset (if set) - V2
-                if let assetId = assetId, transaction.assetId != assetId {
-                    return false
-                }
+                // Note: categoryId, assetId, startDate, endDate filters are applied server-side
+                // via API query parameters, so no need to filter again here
                 
                 return true
             }
@@ -308,6 +305,50 @@ final class TransactionViewModel: ObservableObject {
         loadedCount = 0
     }
     
+    // MARK: - Fetch Categories
+    
+    func fetchCategories() {
+        isCategoriesLoading = true
+        Task {
+            do {
+                let fetchedCategories = try await CategoryService.shared.getCategories()
+                await MainActor.run {
+                    self.categories = fetchedCategories
+                    self.isCategoriesLoading = false
+                }
+            } catch {
+                await MainActor.run {
+                    self.isCategoriesLoading = false
+                    print("❌ Failed to fetch categories: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+    
+    // MARK: - Apply Filters
+    
+    func applyFilters(categoryId: Int?, startDate: Date?, endDate: Date?) {
+        self.categoryId = categoryId
+        self.startDate = startDate
+        self.endDate = endDate
+        fetchTransactions(reset: true)
+    }
+    
+    // MARK: - Clear Advanced Filters
+    
+    func clearAdvancedFilters() {
+        categoryId = nil
+        startDate = nil
+        endDate = nil
+        fetchTransactions(reset: true)
+    }
+    
+    // MARK: - Check if advanced filters are active
+    
+    var hasActiveAdvancedFilters: Bool {
+        categoryId != nil || startDate != nil || endDate != nil
+    }
+
     // MARK: - Delete Transaction (V2 API)
     
     func deleteTransaction(_ transaction: Transaction) {
