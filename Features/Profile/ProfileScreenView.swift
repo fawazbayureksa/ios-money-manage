@@ -13,6 +13,7 @@ struct ProfileScreenView: View {
     @State private var showBudgetAlerts = false
     @State private var showWallets = false
     @State private var showCategoryManagement = false
+    @State private var showEmailSync = false
     @State private var budgetAlertCount = 0
     
     var body: some View {
@@ -62,6 +63,17 @@ struct ProfileScreenView: View {
                                     color: .purple,
                                     action: { 
                                         showWallets = true
+                                    }
+                                )
+
+                                MenuItemView(
+                                    icon: "envelope.badge",
+                                    title: "Email Sync",
+                                    description: "Connect Gmail and auto-import bank emails",
+                                    badgeCount: nil,
+                                    color: .teal,
+                                    action: {
+                                        showEmailSync = true
                                     }
                                 )
                             }
@@ -131,6 +143,9 @@ struct ProfileScreenView: View {
             }
             .navigationDestination(isPresented: $showWallets) {
                 WalletScreenView()
+            }
+            .navigationDestination(isPresented: $showEmailSync) {
+                EmailSyncView()
             }
             .alert("Sign Out", isPresented: $logoutModel.showLogoutAlert) {
                 Button("Cancel", role: .cancel) { }
