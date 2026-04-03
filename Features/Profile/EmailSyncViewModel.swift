@@ -61,7 +61,7 @@ final class EmailSyncViewModel: ObservableObject {
 
             let canOpen = UIApplication.shared.canOpenURL(authURL)
             if canOpen {
-                UIApplication.shared.open(authURL)
+                await UIApplication.shared.open(authURL)
             } else {
                 errorMessage = "Unable to open OAuth URL"
             }
